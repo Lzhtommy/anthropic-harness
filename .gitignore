@@ -1,0 +1,14 @@
+node_modules/
+frontend/node_modules/
+mcp-server/node_modules/
+frontend/build/
+frontend/dist/
+backend/data/db.json
+.harness/.hook-results/
+.harness/.hook-logs/
+.harness/baseline.json
+.reports/
+.playwright-cli/*
+!.playwright-cli/_tasks/
+test-results/
+playwright-report/

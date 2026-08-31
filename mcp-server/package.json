@@ -1,0 +1,11 @@
+{
+  "name": "harness-mcp-server",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Harness MCP Server — Scripts 层的标准化上层封装（8 个工具）",
+  "main": "index.js",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}

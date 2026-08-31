@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Airpods Wireless Bluetooth Headphones",
+    "price": 89.99,
+    "description": "Bluetooth technology lets you connect it with compatible devices wirelessly.",
+    "createdAt": "2026-01-05T08:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "iPhone 15 Pro 256GB",
+    "price": 999.99,
+    "description": "A transformative triple-camera system.",
+    "createdAt": "2026-02-14T08:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Mechanical Keyboard 87 Keys",
+    "price": 59.5,
+    "description": "Hot-swappable switches with PBT keycaps.",
+    "createdAt": "2026-03-20T08:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "name": "4K Ultra HD Monitor 27inch",
+    "price": 329.0,
+    "description": "IPS panel with 99% sRGB coverage.",
+    "createdAt": "2026-04-02T08:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "name": "USB-C Hub 8-in-1",
+    "price": 24.99,
+    "description": "HDMI, PD charging, SD card reader in one hub.",
+    "createdAt": "2026-05-11T08:00:00.000Z"
+  }
+]

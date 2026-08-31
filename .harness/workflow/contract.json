@@ -1,0 +1,254 @@
+{
+  "$comment": "Role Contract 单一真相（SSOT）。roles.<name>.inputs 必须与 .claude/agents/<name>.md 的「## 必读」清单、subagent-orchestration.md 附录必读清单三边严格一致（check-harness.sh 校验，任一侧漂移 FAIL）。<task> 为任务名占位符。",
+  "roles": {
+    "project-manager": {
+      "registered_as_subagent": false,
+      "inputs": [
+        ".harness/agents/project-manager.md",
+        ".harness/tasks/board.md",
+        ".harness/workflow/transitions.json",
+        ".harness/workflow/contract.json",
+        ".harness/specs/_index.md"
+      ],
+      "optional_inputs": [".harness/specs/*.md", ".harness/deliverables/<task>/*.md"],
+      "outputs": [
+        ".harness/tasks/board.md",
+        ".harness/specs/*.md (仅 archive 段 Spec Merge)",
+        ".harness/memory/entries/*.md (仅 archive 段 Memory Merge)",
+        ".harness/memory/index.md (仅 archive 段)",
+        ".harness/deliverables/_archive/<task>/ (仅 archive 段 mv)"
+      ],
+      "output_forbidden": [
+        ".harness/deliverables/<task>/*.md",
+        "backend/", "frontend/", "mcp-server/", "e2e/", "package.json"
+      ],
+      "blocking_conditions": [
+        "当前阶段文档不存在或缺少明确结论",
+        "就绪结论未经用户确认（propose 段末卡点）",
+        "跨界回退需要用户决策（需求级问题）",
+        "propose 阶段需求范围/口径/验收不清晰且无法从文档推导",
+        "无法判断的问题一律暂停交人决策"
+      ],
+      "exits": {
+        "propose_end": "human_approval_1 (等待 /harness-apply)",
+        "apply_end": "AWAITING_ARCHIVE (等待 /harness-archive)",
+        "archive_end": "DONE"
+      }
+    },
+    "business-analyst": {
+      "stage": "requirements",
+      "inputs": [
+        ".harness/agents/business-analyst.md",
+        ".harness/deliverables/<task>/proposal.md",
+        ".harness/specs/_index.md",
+        ".harness/codebase-guide/overview.md",
+        ".harness/tasks/board.md"
+      ],
+      "optional_inputs": [".harness/specs/*.md"],
+      "outputs": [".harness/deliverables/<task>/requirements.md"],
+      "conclusions": ["PASS", "BLOCK"],
+      "blocking_conditions": [
+        "需求存在无法独立消解的二义性（必须人来澄清）",
+        "需求与 specs/ 现有能力存在不可调和冲突",
+        "proposal 信息严重不足无法推导 SHALL/GWT"
+      ],
+      "exits": {
+        "PASS": "design",
+        "BLOCK": "human_escalation_to proposal"
+      }
+    },
+    "solution-architect": {
+      "stage": "design",
+      "inputs": [
+        ".harness/agents/solution-architect.md",
+        ".harness/deliverables/<task>/requirements.md",
+        ".harness/codebase-guide/overview.md",
+        ".harness/codebase-guide/backend-arch.md",
+        ".harness/codebase-guide/frontend-arch.md",
+        ".harness/codebase-guide/deps.md"
+      ],
+      "optional_inputs": [".harness/specs/_index.md", ".harness/specs/*.md"],
+      "outputs": [".harness/deliverables/<task>/design.md"],
+      "conclusions": ["PASS", "BLOCK"],
+      "blocking_conditions": [
+        "需求夹带实现层内容（文件路径/框架名/Schema/URL）→ 打回 BA 净化",
+        "需求自相矛盾或需重大架构变更但需求未提及",
+        "方案与 specs/ 现有接口行为定义冲突",
+        "测试一致性/E2E 资产归属无法拆清"
+      ],
+      "exits": {
+        "PASS": "readiness (standard/refactor) | human_approval_1 (quick)",
+        "BLOCK": "rollback_to business-analyst | rollback_to solution-architect"
+      }
+    },
+    "readiness-reviewer": {
+      "stage": "readiness",
+      "profiles": ["standard", "refactor"],
+      "inputs": [
+        ".harness/agents/readiness-reviewer.md",
+        ".harness/deliverables/<task>/requirements.md",
+        ".harness/deliverables/<task>/design.md",
+        ".harness/codebase-guide/overview.md",
+        ".harness/specs/_index.md"
+      ],
+      "optional_inputs": [".harness/specs/*.md"],
+      "outputs": [".harness/deliverables/<task>/readiness-review.md"],
+      "conclusions": ["PASS", "BLOCK"],
+      "blocking_conditions": [
+        "需求缺少 SHALL Requirement 或 GWT Scenario",
+        "需求夹带实现层内容且未净化（硬 BLOCK）",
+        "方案存在明显遗漏（错误处理/认证保护/回滚路径）",
+        "方案影响面大但未充分评估风险",
+        "方案与 codebase-guide 架构模式严重不符"
+      ],
+      "exits": {
+        "PASS": "human_approval_1",
+        "BLOCK": "rollback_to business-analyst | rollback_to solution-architect"
+      }
+    },
+    "developer": {
+      "stage": "development",
+      "inputs": [
+        ".harness/agents/developer.md",
+        ".harness/rules/code-standards.md",
+        ".harness/deliverables/<task>/requirements.md",
+        ".harness/deliverables/<task>/design.md",
+        ".harness/deliverables/<task>/readiness-review.md",
+        ".harness/memory/index.md",
+        ".harness/codebase-guide/overview.md",
+        ".harness/codebase-guide/backend-arch.md",
+        ".harness/codebase-guide/frontend-arch.md",
+        ".harness/codebase-guide/deps.md",
+        ".harness/codebase-guide/dev-recipes.md",
+        ".claude/skills/build-test/SKILL.md",
+        ".claude/skills/post-verify/SKILL.md",
+        ".claude/skills/systematic-debug/SKILL.md"
+      ],
+      "outputs": [
+        "backend/** frontend/** 实现代码与单元/组件测试",
+        ".harness/deliverables/<task>/dev-log.md",
+        ".harness/codebase-guide/*.md (架构面改动同步, C7)"
+      ],
+      "output_forbidden": ["e2e/*.e2e.js", "e2e/*.cases.md", ".playwright-cli/**"],
+      "conclusions": ["hook 结果文件判定 (非 dev-log 自述)"],
+      "verdict_source": ".harness/.hook-results/<task>--developer.json",
+      "blocking_conditions": [
+        "就绪背书阻塞项未关闭前不得编码",
+        "requirements/design 与现有代码冲突且无法推导正确口径"
+      ],
+      "exits": {
+        "PASS": "review (须 hook 结果文件 PASS)",
+        "FAIL": "retry_self (总执行上限 5 次含首跑, 超限升级给人)",
+        "BLOCK": "human_escalation"
+      }
+    },
+    "code-reviewer": {
+      "stage": "review",
+      "inputs": [
+        ".harness/agents/code-reviewer.md",
+        ".claude/skills/code-review/SKILL.md",
+        ".harness/deliverables/<task>/requirements.md",
+        ".harness/deliverables/<task>/design.md",
+        ".harness/deliverables/<task>/readiness-review.md",
+        ".harness/deliverables/<task>/dev-log.md",
+        ".harness/codebase-guide/backend-arch.md",
+        ".harness/codebase-guide/frontend-arch.md",
+        ".harness/codebase-guide/deps.md",
+        "git diff"
+      ],
+      "outputs": [".harness/deliverables/<task>/code-review.md"],
+      "output_forbidden": ["任何代码文件", "任何上游文档"],
+      "conclusions": ["PASS", "REJECT"],
+      "reject_ownership": ["Dev-owned", "TE-owned", "Upstream-contract"],
+      "blocking_conditions": [
+        "需求未被完整实现 / 实现严重偏离方案且未说明 (Dev-owned)",
+        "违反编码规范红线：缺认证保护 / 未用 asyncHandler (Dev-owned)",
+        "存在明显安全漏洞 (Dev-owned)",
+        "requirements 与 design 冲突 / Testing-only 归属未拆清 (Upstream-contract)"
+      ],
+      "exits": {
+        "PASS": "testing",
+        "REJECT(Dev-owned)": "rollback_to developer",
+        "REJECT(TE-owned)": "route_to test-engineer (不得打回 developer)",
+        "REJECT(Upstream-contract)": "rollback_to solution-architect | business-analyst | human_escalation"
+      }
+    },
+    "test-engineer": {
+      "stage": "testing",
+      "inputs": [
+        ".harness/agents/test-engineer.md",
+        ".claude/skills/test-e2e/SKILL.md",
+        ".claude/skills/build-test/SKILL.md",
+        ".claude/skills/post-verify/SKILL.md",
+        ".harness/deliverables/<task>/requirements.md",
+        ".harness/deliverables/<task>/design.md",
+        ".harness/deliverables/<task>/code-review.md"
+      ],
+      "outputs": [
+        ".harness/deliverables/<task>/test-report.md",
+        "e2e/<task>.e2e.js",
+        "e2e/<task>.cases.md",
+        ".playwright-cli/_tasks/<task>/ (B 类证据)"
+      ],
+      "output_forbidden": ["产品代码 (backend/ frontend/)", "任何上游需求/方案文档"],
+      "conclusions": ["PASS", "FAIL"],
+      "fail_subtypes": ["功能 bug", "需求级", "环境阻塞", "定位阻塞"],
+      "verdict_source": ".harness/.hook-results/<task>--test-engineer.json",
+      "blocking_conditions": [
+        "code-review 不是 PASS 状态",
+        "任何 Critical 级测试不通过",
+        "Major 级失败数 >= 3",
+        "回归测试发现已有功能被破坏",
+        "post-verify 验证不通过"
+      ],
+      "exits": {
+        "PASS": "awaiting_archive (PM 收尾)",
+        "FAIL(功能 bug)": "rollback_to developer",
+        "FAIL(需求级)": "human_escalation_to proposal",
+        "FAIL(环境阻塞)": "pm_fix_env_then_retry test-engineer",
+        "FAIL(定位阻塞)": "human_escalation"
+      }
+    }
+  },
+  "profile_variants": {
+    "quick": {
+      "skip_stages": ["readiness"],
+      "readiness_basis": ".harness/deliverables/<task>/design.md ## 就绪自评",
+      "inputs_override": {
+        "developer": { "remove": [".harness/deliverables/<task>/readiness-review.md"] },
+        "code-reviewer": { "remove": [".harness/deliverables/<task>/readiness-review.md"] }
+      }
+    },
+    "standard": {},
+    "refactor": {
+      "pre_stages": ["impact-analysis"],
+      "mandatory_actions": ["进入 impact-analysis 前 PM 必须先执行 bash .harness/scripts/baseline.sh snapshot"],
+      "impact_stage": {
+        "agent": "solution-architect",
+        "inputs": [
+          ".harness/agents/solution-architect.md",
+          ".harness/deliverables/<task>/proposal.md",
+          ".harness/specs/_index.md",
+          ".harness/codebase-guide/index.md",
+          ".harness/codebase-guide/overview.md",
+          ".harness/codebase-guide/backend-arch.md",
+          ".harness/codebase-guide/frontend-arch.md"
+        ],
+        "outputs": [".harness/deliverables/<task>/impact-analysis.md"]
+      },
+      "extra_inputs": {
+        "business-analyst": [".harness/deliverables/<task>/impact-analysis.md"],
+        "readiness-reviewer": [".harness/deliverables/<task>/impact-analysis.md"]
+      }
+    }
+  },
+  "retry_limits": {
+    "developer": 5,
+    "default": 3,
+    "$comment": "含首跑的总执行上限；超限升级给人，禁止机械重试"
+  },
+  "escalation_rules": {
+    "testing_requirement_level": "human_escalation_to proposal",
+    "$comment": "testing 阶段需求级问题只能升级给人（human_escalation_to），禁止 rollback_to requirements"
+  }
+}

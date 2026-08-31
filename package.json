@@ -1,0 +1,26 @@
+{
+  "name": "harness-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Harness Engineering demo host project (Express + React + JSON store)",
+  "scripts": {
+    "server": "node backend/server.js",
+    "client": "npm run dev --prefix frontend",
+    "data:import": "node backend/seeder.js",
+    "build": "npm run build --prefix frontend",
+    "test:backend": "vitest run",
+    "test:frontend": "npm run test --prefix frontend",
+    "test:all": "npm run test:backend && npm run test:frontend",
+    "test:e2e": "playwright test",
+    "test:e2e:archived": "E2E_SET=archived playwright test",
+    "test:e2e:all": "E2E_SET=all playwright test"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "$comment": "机器读版状态迁移。8 阶段骨架 + 3 档 profile。阶段名与 stage-doc.sh 的 <阶段> 参数、documents 键严格一致。",
+  "stages": [
+    "proposal",
+    "impact-analysis",
+    "requirements",
+    "design",
+    "readiness",
+    "development",
+    "review",
+    "testing",
+    "awaiting_archive",
+    "done"
+  ],
+  "documents": {
+    "impact-analysis": "impact-analysis.md",
+    "requirements": "requirements.md",
+    "design": "design.md",
+    "readiness": "readiness-review.md",
+    "development": "dev-log.md",
+    "review": "code-review.md",
+    "testing": "test-report.md"
+  },
+  "stage_agents": {
+    "impact-analysis": "solution-architect",
+    "requirements": "business-analyst",
+    "design": "solution-architect",
+    "readiness": "readiness-reviewer",
+    "development": "developer",
+    "review": "code-reviewer",
+    "testing": "test-engineer",
+    "awaiting_archive": "project-manager",
+    "done": "project-manager"
+  },
+  "conclusions": {
+    "impact-analysis": ["PASS", "BLOCK"],
+    "requirements": ["PASS", "BLOCK"],
+    "design": ["PASS", "BLOCK"],
+    "readiness": ["PASS", "BLOCK"],
+    "development": ["PASS", "FAIL", "BLOCK"],
+    "review": ["PASS", "REJECT"],
+    "testing": ["PASS", "FAIL"]
+  },
+  "transitions": [
+    { "from": "proposal", "on": "/harness-propose 定稿", "to": "requirements", "note": "refactor 档先进 impact-analysis" },
+    { "from": "impact-analysis", "on": "PASS", "to": "requirements" },
+    { "from": "impact-analysis", "on": "BLOCK", "to": "human_escalation(proposal)" },
+    { "from": "requirements", "on": "PASS", "to": "design" },
+    { "from": "requirements", "on": "BLOCK", "to": "human_escalation(proposal)" },
+    { "from": "design", "on": "PASS", "to": "readiness", "note": "quick 档直接到 human_approval_1（design 含就绪自评）" },
+    { "from": "design", "on": "BLOCK", "to": "rollback(business-analyst|solution-architect)" },
+    { "from": "readiness", "on": "PASS", "to": "human_approval_1" },
+    { "from": "readiness", "on": "BLOCK", "to": "rollback(business-analyst|solution-architect)" },
+    { "from": "human_approval_1", "on": "/harness-apply", "to": "development" },
+    { "from": "development", "on": "hook PASS", "to": "review" },
+    { "from": "development", "on": "hook FAIL", "to": "retry(developer, max=5含首跑)" },
+    { "from": "development", "on": "BLOCK", "to": "human_escalation" },
+    { "from": "review", "on": "PASS", "to": "testing" },
+    { "from": "review", "on": "REJECT(Dev-owned)", "to": "rollback(developer)" },
+    { "from": "review", "on": "REJECT(TE-owned)", "to": "route(test-engineer)" },
+    { "from": "review", "on": "REJECT(Upstream-contract)", "to": "rollback(solution-architect|business-analyst)|human_escalation" },
+    { "from": "testing", "on": "PASS + tester hook PASS + check-harness PASS + 模板残留检测 PASS", "to": "awaiting_archive" },
+    { "from": "testing", "on": "FAIL(功能 bug)", "to": "rollback(developer)" },
+    { "from": "testing", "on": "FAIL(需求级)", "to": "human_escalation(proposal)" },
+    { "from": "testing", "on": "FAIL(环境阻塞)", "to": "pm_fix_env_then_retry(test-engineer)" },
+    { "from": "awaiting_archive", "on": "/harness-archive", "to": "done" }
+  ],
+  "profiles": {
+    "quick": {
+      "propose": ["requirements", "design"],
+      "apply": ["development", "review", "testing"],
+      "readiness_basis": "design.md ## 就绪自评",
+      "note": "跳过 readiness Task；人工卡点 1 改读 design.md 自评段"
+    },
+    "standard": {
+      "propose": ["requirements", "design", "readiness"],
+      "apply": ["development", "review", "testing"]
+    },
+    "refactor": {
+      "propose": ["impact-analysis", "requirements", "design", "readiness"],
+      "apply": ["development", "review", "testing"],
+      "mandatory_actions": ["bash .harness/scripts/baseline.sh snapshot (进入 impact-analysis 前)"]
+    }
+  },
+  "human_gates": [
+    { "id": "human_approval_1", "position": "propose 段末", "trigger": "用户审阅后执行 /harness-apply" },
+    { "id": "human_approval_2", "position": "apply 段末 (AWAITING_ARCHIVE)", "trigger": "用户审阅后执行 /harness-archive" }
+  ],
+  "board_states": ["PENDING", "IN_PROGRESS", "AWAITING_ARCHIVE", "DONE"],
+  "hard_rules": [
+    "propose 段禁止修改任何源码（frontend/ backend/ mcp-server/ e2e/ package.json 只读）",
+    "跨命令边界不允许自主回退（apply 段发现需求级问题必须升级给人）",
+    "PM 不得自行把 AWAITING_ARCHIVE 降级回 IN_PROGRESS（只有命令入口可改状态）",
+    "TE FAIL 时不得进入 AWAITING_ARCHIVE",
+    "test-report.md 文末 ## 结论 PASS 是 AWAITING_ARCHIVE 的前置硬条件"
+  ]
+}
