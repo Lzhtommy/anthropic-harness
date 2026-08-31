@@ -12,3 +12,4 @@ backend/data/db.json
 !.playwright-cli/_tasks/
 test-results/
 playwright-report/
+training/
