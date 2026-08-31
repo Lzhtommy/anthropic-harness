@@ -8,7 +8,7 @@
 
 | 路径 | Screen |
 |---|---|
-| `/` | `screens/ProductListScreen.jsx`（商品列表，`data-testid="product-list"`） |
+| `/` | `screens/ProductListScreen.jsx`（商品列表，`data-testid="product-list"`；排序选择器 `data-testid="sort-select"`，以 `useSearchParams` 读写 `?sort=`、保留 `keyword`） |
 | `/product/:id` | `screens/ProductDetailScreen.jsx`（详情；错误时渲染 `role="alert"` 提示） |
 
 ## 状态管理
@@ -18,7 +18,7 @@
 ## API 层
 
 - `frontend/src/api/client.js`：唯一 fetch 封装 `apiGet(path)`（非 2xx 抛 Error(message)）。**组件内禁止裸 fetch（verify C4）、禁止 axios（verify C6）**
-- `frontend/src/api/products.js`：`listProducts()` → GET /api/products；`getProduct(id)` → GET /api/products/:id
+- `frontend/src/api/products.js`：`listProducts({keyword?, sort?})` → GET /api/products（URLSearchParams 拼查询串，空值不拼，无参等价现状）；`getProduct(id)` → GET /api/products/:id
 - dev server 通过 vite.config.js 把 `/api` 代理到后端（端口读 env PORT，默认 5001）
 
 ## 组件库
@@ -27,4 +27,9 @@
 
 ## URL 契约
 
-- 商品列表关键词过滤：后端支持 `GET /api/products?keyword=<kw>`（前端界面暂未暴露搜索框）
+- 商品列表关键词过滤：后端支持 `GET /api/products?keyword=<kw>`（前端界面暂未暴露搜索框；ProductListScreen 会读取地址中的 `keyword` 并透传，兑现既有规约 PRD-R-002）
+- 商品列表排序（页面地址即排序状态唯一持久化载体，PRD-R-006）：
+  - `/` → 默认顺序，选择器显示"默认排序"
+  - `/?sort=price_asc|price_desc|newest` → 对应排序，选择器同步选中
+  - `/?sort=<非法值>` → 默认顺序展示，选择器回退"默认排序"，无错误 UI（后端白名单静默降级）
+  - `/?keyword=x&sort=...` → 先过滤后排序；切换排序保留 `keyword`，选"默认排序"删除 `sort` 键

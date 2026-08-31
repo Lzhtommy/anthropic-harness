@@ -17,7 +17,7 @@ fi
 
 TASK_DIR="$ROOT/.harness/deliverables/$TASK"
 if [ ! -d "$TASK_DIR" ]; then
-  echo "[FAIL] 任务目录不存在: $TASK_DIR（先运行 init-task.sh）" >&2
+  echo "[FAIL] 任务目录不存在: ${TASK_DIR}（先运行 init-task.sh）" >&2
   exit 1
 fi
 

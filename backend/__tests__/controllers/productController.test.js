@@ -44,7 +44,31 @@ describe('getProducts', () => {
   it('keyword 透传给 Model 过滤', async () => {
     mockFind.mockReturnValue([]);
     await getProducts({ query: { keyword: 'phone' } }, mockRes(), vi.fn());
-    expect(mockFind).toHaveBeenCalledWith({ keyword: 'phone' });
+    expect(mockFind).toHaveBeenCalledWith({ keyword: 'phone', sort: undefined });
+  });
+
+  // 排序语义断言在 backend/__tests__/models/productModel.test.js（不 mock Model）；
+  // 此处只断言 controller 的透传契约与响应结构（PRD-S-010~014、PRD-S-016）。
+  it('sort 透传给 Model（PRD-S-010~012）', async () => {
+    mockFind.mockReturnValue([]);
+    await getProducts({ query: { sort: 'price_asc' } }, mockRes(), vi.fn());
+    expect(mockFind).toHaveBeenCalledWith({ keyword: undefined, sort: 'price_asc' });
+  });
+
+  it('keyword 与 sort 同时透传（PRD-S-014）', async () => {
+    mockFind.mockReturnValue([]);
+    await getProducts({ query: { keyword: 'iphone', sort: 'price_desc' } }, mockRes(), vi.fn());
+    expect(mockFind).toHaveBeenCalledWith({ keyword: 'iphone', sort: 'price_desc' });
+  });
+
+  it('不合法 sort 值仍走 200 正常响应，结构不变（PRD-S-016）', async () => {
+    mockFind.mockReturnValue([{ id: 1, name: 'A' }]);
+    const res = mockRes();
+    const next = vi.fn();
+    await getProducts({ query: { sort: 'hacked' } }, res, next);
+    expect(res.statusCode).toBe(200);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ products: [{ id: 1, name: 'A' }] });
   });
 });
 

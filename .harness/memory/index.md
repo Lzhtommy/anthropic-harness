@@ -9,11 +9,12 @@
 
 ## frontend
 
-（暂无条目）
+- [2026-08-31__frontend__rtl-cleanup-globals-false](entries/2026-08-31__frontend__rtl-cleanup-globals-false.md) — vitest `globals:false` 下 RTL auto-cleanup 失效，组件测试须显式 cleanup
 
 ## tooling
 
 - [2026-08-31__tooling__macos-timeout-missing](entries/2026-08-31__tooling__macos-timeout-missing.md) — macOS 默认无 GNU timeout，长驻进程守护须自适应降级
+- [2026-08-31__tooling__bash-multibyte-var-boundary](entries/2026-08-31__tooling__bash-multibyte-var-boundary.md) — bash 3.2 下 `$VAR` 后紧跟全角字符被吞入变量名，一律写 `${VAR}`
 
 ## infra
 

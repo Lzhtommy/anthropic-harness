@@ -1,9 +1,10 @@
 import asyncHandler from '../middleware/asyncHandler.js';
 import Product from '../models/productModel.js';
 
-// GET /api/products?keyword=
+// GET /api/products?keyword=&sort=
+// sort ∈ {price_asc, price_desc, newest}，白名单校验在 Model 层，非法值静默降级默认顺序（PRD-S-016）
 export const getProducts = asyncHandler(async (req, res) => {
-  const products = Product.find({ keyword: req.query.keyword });
+  const products = Product.find({ keyword: req.query.keyword, sort: req.query.sort });
   res.json({ products });
 });
 

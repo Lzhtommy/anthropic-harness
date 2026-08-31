@@ -116,9 +116,9 @@ else fail "B3: 后端启动冒烟失败（bash .harness/scripts/backend-smoke.sh
 # B4 E2E 证据审计（设 VERIFY_TASK 时生效）
 if [ -n "${VERIFY_TASK:-}" ]; then
   if python3 "$ROOT/.harness/scripts/check-e2e-evidence.py" audit "$VERIFY_TASK" --duplicates-as-warn >/dev/null 2>&1; then
-    pass "B4: E2E 证据审计通过（task=$VERIFY_TASK）"
+    pass "B4: E2E 证据审计通过（task=${VERIFY_TASK}）"
   else
-    fail "B4: E2E 证据审计失败（python3 .harness/scripts/check-e2e-evidence.py audit $VERIFY_TASK）"
+    fail "B4: E2E 证据审计失败（python3 .harness/scripts/check-e2e-evidence.py audit ${VERIFY_TASK}）"
   fi
 else
   pass "B4: E2E 证据审计（未设 VERIFY_TASK，本项跳过）"

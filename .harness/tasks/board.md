@@ -6,3 +6,4 @@
 
 | ID | 任务 | 阶段 | 状态 | profile | 文档位置 | 结论 |
 |---|---|---|---|---|---|---|
+| 001 | product-sort | 交付完成 | DONE | standard | _archive/product-sort/ | PASS |

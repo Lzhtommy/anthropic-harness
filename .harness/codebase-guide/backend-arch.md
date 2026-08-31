@@ -11,7 +11,7 @@
 
 `/api/products`（backend/routes/productRoutes.js）：
 ```
-**GET** / → productController.getProducts → Product.find (keyword 过滤，大小写不敏感)
+**GET** / → productController.getProducts → Product.find (keyword 过滤，大小写不敏感；sort 排序：price_asc/price_desc/newest 白名单，非法值忽略降级默认顺序)
 **GET** /:id → productController.getProductById → Product.findById（不存在 404）
 **POST** / → protect → admin → productController.createProduct → Product.create（缺 name/负价 400）
 ```
@@ -24,7 +24,7 @@
 
 ## 数据模型
 
-- `backend/models/productModel.js`（Product）：id / name / price / description / createdAt；find({keyword}) / findById / create（id 自增取 store.nextId）
+- `backend/models/productModel.js`（Product）：id / name / price / description / createdAt；find({keyword, sort}) / findById / create（id 自增取 store.nextId）。find 契约：先 keyword 过滤、后 sort 排序（白名单 price_asc/price_desc/newest，副本排序不污染 store 原序；非法 sort 静默忽略）
 - `backend/models/userModel.js`（User）：id / name / email / password / isAdmin；findByEmail（大小写不敏感）/ findById
 - 存储层 `backend/db/store.js`：read / write / reset / nextId，落盘 `backend/data/db.json`（gitignore）。**Model 禁止绕过 store 直接 import fs（verify A3）**
 
@@ -52,5 +52,5 @@
 
 ## 测试
 
-- `backend/__tests__/{utils,controllers,middleware}/*.test.js`，Vitest node 环境，Model 全 vi.mock
+- `backend/__tests__/{utils,controllers,middleware,models}/*.test.js`，Vitest node 环境；controller 测试 Model 全 vi.mock，model 测试只 mock db/store.js（排序/过滤语义真实执行）
 - 运行：`npm run test:backend`（根 vitest.config.js 限定 include）
